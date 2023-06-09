@@ -7,15 +7,16 @@
     @ready="onEditorReady"
   ></ckeditor>
   <button class="buttonTest" @click="clone">Clone Editor</button>
-  <button class="buttonTest" @click="setEditorData">setEditor</button>
-  <div ref="editorClone"></div>
+  <button class="buttonTest" @click="sendBackData">Send Data</button>
+  <div ref="editorClone" class="ck-content"></div>
 </template>
 
 <script>
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import CKEditor from "@ckeditor/ckeditor5-vue";
 import { MyUploadAdapter } from "./upload-adapter/uploadAdapter.js";
-import "./styles/style-ck-editor.css";
+import "../src/styles/style-ck-editor.css"
+import axios from "axios";
 
 export default {
   name: "App",
@@ -24,13 +25,9 @@ export default {
   },
   data() {
     return {
-      editorInstance: null,
       editor: ClassicEditor,
       editorData: "",
       editorConfig: {
-        removePlugins: ["MediaEmbed"],
-        schema: "preserve",
-        allowedContent: true,
         extraPlugins: [
           function (editor) {
             editor.plugins.get("FileRepository").createUploadAdapter = (
@@ -44,16 +41,20 @@ export default {
     };
   },
   methods: {
-    onEditorReady(event) {
-      this.editorInstance = event;
-    },
-    setEditorData() {
-      const newContent = '<div>Novo conteúdo do editor</div>';
-      this.editorInstance.setData(newContent);
-    },
     clone() {
       this.$refs.editorClone.innerHTML = this.editorData;
     },
+    async sendBackData() {
+      const data = `<div class="ck-content">${this.editorData}</div>`
+
+      const response = await axios.post('http://localhost:3000/content', {
+        data: {
+          editorContent: data
+        }
+      })
+
+      console.log(response)
+    }
   },
 };
 </script>
