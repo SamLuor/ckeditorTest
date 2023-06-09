@@ -11,19 +11,22 @@ export class MyUploadAdapter {
     return this.loader.file.then(
       (file) =>
         new Promise((resolve, reject) => {
-          const toBase64 = (file) =>
+          const fileHandler = (file) =>
             new Promise((resolve, reject) => {
-              const reader = new FileReader();
-              reader.readAsDataURL(file);
-              reader.onload = () => resolve(reader.result);
-              reader.onerror = (error) => reject(error);
+
+              if((file.size / 1048576) <= 5) {
+                const formData = new FormData();
+                formData.append("image", file);
+
+                resolve(formData);
+              } else {
+                reject(`Não foi possivel fazer upload, imagem maior que 5mb`);
+              }
             });
 
-          return toBase64(file).then((cFile) => {
+          return fileHandler(file).then((image) => {
             return axios
-              .post("http://localhost:3000/upload-imagem", {
-                imageBinary: cFile,
-              })
+              .post("http://localhost:3000/upload-imagem", image)
               .then((response) => {
                 if (response.status) {
                   this.loader.uploaded = true;
