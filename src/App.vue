@@ -4,7 +4,7 @@
     v-model="editorData"
     :editor="editor"
     :config="editorConfig"
-    @ready="onEditorReady"
+    @ready="receiveData"
   ></ckeditor>
   <button class="buttonTest" @click="clone">Clone Editor</button>
   <button class="buttonTest" @click="sendBackData">Send Data</button>
@@ -28,6 +28,14 @@ export default {
       editor: ClassicEditor,
       editorData: "",
       editorConfig: {
+        protectedSource: [
+          // eslint-disable-next-line no-useless-escape
+          /<[\s\S]*?\>/g,  // Allows all HTML tags and their content
+          /<div[\s\S]*?>[\s\S]*?<\/div>/g  // Allows <div> tags and their content
+        ],
+        htmlFilter: {
+          isSecure: false
+        },
         extraPlugins: [
           function (editor) {
             editor.plugins.get("FileRepository").createUploadAdapter = (
@@ -47,6 +55,8 @@ export default {
     async sendBackData() {
       const data = `<div class="ck-content">${this.editorData}</div>`
 
+      console.log(data);
+
       const response = await axios.post('http://localhost:3000/content', {
         data: {
           editorContent: data
@@ -54,6 +64,11 @@ export default {
       })
 
       console.log(response)
+    },
+    async receiveData() {
+      const response = await axios.get('http://localhost:3000/data')
+
+      this.editorData = response.data.data
     }
   },
 };
